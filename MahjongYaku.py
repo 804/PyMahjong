@@ -1,6 +1,5 @@
 # coding=utf-8
 from MahjongSet import MahjongSet
-import sys
 
 __author__ = '804'
 
@@ -138,38 +137,29 @@ def is_sananko(chand):
     return False
 
 
-# проверка руки на саншоку(содержит обработчик исключений)
-# TODO узнать, как сделать класс невидимым для внешних вызовов
-def __is_sanshoku(set_hand, set_name):
-    try:
-        if set_name not in ('pon', 'chi'):
-            raise Exception('Argument error',
-                            "Function '__is_sanshoku' has been called with incorrect parameter 'set_name'")
-    except Exception as e:
-        print e[0] + ': ' + e[1]
-        sys.exit(0)
+# проверка руки на саншоку доджун
+def is_sanshoku_dodjun(set_hand):
     tuple_structure = []
-    if set_name == 'pon':
-        limit = 9
-    else:
-        limit = 7
     for mset in set_hand:
         tuple_structure.append((mset.name, mset.set_tile))
-    for index in range(limit):
-        if ((set_name, index) in tuple_structure) and ((set_name, index + 9) in tuple_structure) and (
-                    (set_name, index + 18) in tuple_structure):
+    for index in range(7):
+        if (('chi', index) in tuple_structure) and (('chi', index + 9) in tuple_structure) and (
+                    ('chi', index + 18) in tuple_structure):
             return True
     return False
 
 
-# проверка руки на саншоку (доджун)
-def is_sanshoku_dodjun(set_hand):
-    return __is_sanshoku(set_hand, 'chi')
-
-
 # проверка руки на саншоку доко
 def is_sanshoku_doko(set_hand):
-    return __is_sanshoku(set_hand, 'pon')
+    tuple_structure = []
+    for mset in set_hand:
+        tuple_structure.append((mset.name, mset.set_tile))
+    for index in range(9):
+        if ((('pon', index) in tuple_structure) or (('kan', index) in tuple_structure) and (
+                    (('pon', index + 9) in tuple_structure) or (('kan', index + 9) in tuple_structure))) and (
+                    (('pon', index + 18) in tuple_structure) or (('kan', index + 18) in tuple_structure)):
+            return True
+    return False
 
 
 # проверка руки на хонрото (не сочетается с чантой)
@@ -186,6 +176,226 @@ def is_sankatsu(set_hand):
         if quantity == 3:
             return True
     return False
+
+
+# проверка руки на Дайсанген
+def is_daisangen(set_hand):
+    haku = False
+    hatsu = False
+    chun = False
+    for mset in set_hand:
+        haku = (mset.set_tile == 31) and (mset.name in ('pon', 'kan')) or haku
+        hatsu = (mset.set_tile == 32) and (mset.name in ('pon', 'kan')) or hatsu
+        chun = (mset.set_tile == 33) and (mset.name in ('pon', 'kan')) or chun
+    return haku and hatsu and chun
+
+
+# проверка руки на Шосуши
+def is_shosushi(set_hand):
+    est = False
+    south = False
+    west = False
+    north = False
+    have_pare = False
+    for mset in set_hand:
+        if (mset.set_tile in range(27, 31)) and (mset.name in ('pon', 'kan', 'pare')):
+            est = (mset.set_tile == 27) and (mset.name in ('pon', 'kan', 'pare')) or est
+            south = (mset.set_tile == 28) and (mset.name in ('pon', 'kan', 'pare')) or south
+            west = (mset.set_tile == 29) and (mset.name in ('pon', 'kan', 'pare')) or west
+            north = (mset.set_tile == 30) and (mset.name in ('pon', 'kan', 'pare')) or north
+            if not have_pare and mset.name == 'pare':
+                have_pare = True
+    return est and south and west and north and have_pare
+
+
+# проверка руки на Дайсуши
+def is_daisushi(set_hand):
+    est = False
+    south = False
+    west = False
+    north = False
+    for mset in set_hand:
+        est = (mset.set_tile == 27) and (mset.name in ('pon', 'kan')) or est
+        south = (mset.set_tile == 28) and (mset.name in ('pon', 'kan')) or south
+        west = (mset.set_tile == 29) and (mset.name in ('pon', 'kan')) or west
+        north = (mset.set_tile == 30) and (mset.name in ('pon', 'kan')) or north
+    return est and south and west and north
+
+
+# проверка руки на Тсуисо
+def is_tsuiso(hand, set_hand):
+    if is_chitoitsu(hand):
+        return all(tile in range(27, 34) for tile in hand)
+    else:
+        return all(mset.set_tile in range(27, 34) for mset in set_hand)
+
+
+# проверка руки на Суанко (на вход подается закрытая рука)
+def is_suanko(chand, wt):
+    if len(chand) != 5:
+        return False
+    if all(mset.name in ('kan', 'pare') for mset in chand):
+        return False
+    if all(mset.name in ('kan', 'pon', 'pare') for mset in chand) and any(
+                    (mset.set_tile == wt) and (mset.name in ('pon', 'kan')) for mset in chand):
+        return True
+
+
+# проверка руки на Суанко танки
+def is_suanko_tanki(chand, wt):
+    if len(chand) != 5:
+        return False
+    if all(mset.name in ('kan', 'pare') for mset in chand):
+        return False
+    if all(mset.name in ('kan', 'pon', 'pare') for mset in chand) and any(
+                    (mset.set_tile == wt) and (mset.name == 'pare') for mset in chand):
+        return True
+
+
+# проверка руки на Чуренпото (только закрытая рука)
+def is_churenpoto(hand, wt, is_open):
+    if is_open:
+        return False
+    if len(hand) != 14:
+        return False
+    man_index = 0
+    man_tenpai = (0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8, 8)
+    man_attempt = 2
+    pin_index = 0
+    pin_tempai = (9, 9, 9, 10, 11, 12, 13, 14, 15, 16, 17, 17, 17)
+    pin_attempt = 2
+    sou_index = 0
+    sou_tempai = (18, 18, 18, 19, 20, 21, 22, 23, 24, 25, 26, 26, 26)
+    sou_attempt = 2
+    for tile in hand:
+        if (man_attempt == 0) and (pin_attempt == 0) and (sou_attempt == 0):
+            return False
+        if man_attempt != 0:
+            if tile == man_tenpai[man_index]:
+                man_index += 1
+            else:
+                man_attempt -= 1
+        if pin_attempt != 0:
+            if tile == pin_tempai[pin_index]:
+                pin_index += 1
+            else:
+                pin_attempt -= 1
+        if sou_attempt != 0:
+            if tile == sou_tempai[sou_index]:
+                sou_index += 1
+            else:
+                sou_attempt -= 1
+    if man_index == 14:
+        counting = [hand.count(tile) for tile in range(9)]
+        if not any(counting[tile] in (2, 4) for tile in range(9)):
+            return False
+        for index in range(len(counting)):
+            if counting[index] in (4, 2):
+                if wt == index:
+                    return True
+                else:
+                    return False
+    if pin_index == 14:
+        counting = [hand.count(tile) for tile in range(9, 18)]
+        if not any(counting[tile] in (2, 4) for tile in range(9)):
+            return False
+        for index in range(len(counting)):
+            if counting[index] in (4, 2):
+                if wt == 9 + index:
+                    return True
+                else:
+                    return False
+    if sou_index == 14:
+        counting = [hand.count(tile) for tile in range(18, 27)]
+        if not any(counting[tile] in (2, 4) for tile in range(9)):
+            return False
+        for index in range(len(counting)):
+            if counting[index] in (4, 2):
+                if wt == 18 + index:
+                    return True
+                else:
+                    return False
+
+
+# проверка руки на Одинарный чуренпото (только закрытая рука)
+def is_single_churenpoto(hand, wt, is_open):
+    if is_open:
+        return False
+    if len(hand) != 14:
+        return False
+    man_index = 0
+    man_tenpai = (0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8, 8)
+    man_attempt = 2
+    pin_index = 0
+    pin_tempai = (9, 9, 9, 10, 11, 12, 13, 14, 15, 16, 17, 17, 17)
+    pin_attempt = 2
+    sou_index = 0
+    sou_tempai = (18, 18, 18, 19, 20, 21, 22, 23, 24, 25, 26, 26, 26)
+    sou_attempt = 2
+    for tile in hand:
+        if (man_attempt == 0) and (pin_attempt == 0) and (sou_attempt == 0):
+            return False
+        if man_attempt != 0:
+            if tile == man_tenpai[man_index]:
+                man_index += 1
+            else:
+                man_attempt -= 1
+        if pin_attempt != 0:
+            if tile == pin_tempai[pin_index]:
+                pin_index += 1
+            else:
+                pin_attempt -= 1
+        if sou_attempt != 0:
+            if tile == sou_tempai[sou_index]:
+                sou_index += 1
+            else:
+                sou_attempt -= 1
+    if man_index == 14:
+        counting = [hand.count(tile) for tile in range(9)]
+        if not any(counting[tile] in (2, 4) for tile in range(9)):
+            return False
+        for index in range(len(counting)):
+            if counting[index] in (4, 2):
+                if wt == index:
+                    return False
+                else:
+                    return True
+    if pin_index == 14:
+        counting = [hand.count(tile) for tile in range(9, 18)]
+        if not any(counting[tile] in (2, 4) for tile in range(9)):
+            return False
+        for index in range(len(counting)):
+            if counting[index] in (4, 2):
+                if wt == 9 + index:
+                    return False
+                else:
+                    return True
+    if sou_index == 14:
+        counting = [hand.count(tile) for tile in range(18, 27)]
+        if not any(counting[tile] in (2, 4) for tile in range(9)):
+            return False
+        for index in range(len(counting)):
+            if counting[index] in (4, 2):
+                if wt == 18 + index:
+                    return False
+                else:
+                    return True
+
+
+# проверка руки на Рюисоу
+def is_ruisou(set_hand):
+    return all(((mset.name == 'chi') and (mset.set_tile == 19)) or (
+        (mset.name in ('kan', 'pon', 'pare')) and (mset.set_tile in (19, 20, 21, 23, 25, 32))) for mset in set_hand)
+
+
+# проверка руки на Суканцу
+def is_sukantsu(set_hand):
+    return all(mset.name in ('pare', 'kan') for mset in set_hand)
+
+
+# проверка руки на Чинрото
+def is_chinroto(set_hand):
+    return all((mset.set_tile in (0, 8, 9, 17, 18, 26)) and (mset.name in ('pare', 'pon', 'kan')) for mset in set_hand)
 
 
 # подсчет возможных структур руки с повторениями (убраны лишние строки)
@@ -269,22 +479,11 @@ def calc_structure(hand, kan_quantity):
     return structures
 
 
-# TODO проверка руки на Дайсанген
-# TODO проверка руки на Шосуши
-# TODO проверка руки на Дайсуши
-# TODO проверка руки на Тсуисо
-# TODO проверка руки на Суанко
-# TODO проверка руки на Суанко танки
-# TODO проверка руки на Чуренпото
-# TODO проверка руки на Одинарный чуренпото
-# TODO проверка руки на Рюисоу
-# TODO проверка руки на Суканцу
-# TODO проверка руки на Чинрото
-# TODO проверка руки на Казое якуман
-
 # TODO подсчет минипоинтов
 # TODO проработка руки на возможность стакаться с малыми драконами
-########################################################################
+# TODO кан может заменить пон
+# TODO закрытую руку можно проверить наличием 5 сетов в chand
+# #######################################################################
 
 # является ли ожидание 13-сторонним (не обязательная в данной задаче)
 def is_thirteen_sided(hand, wt):
