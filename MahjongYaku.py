@@ -80,8 +80,10 @@ def is_pinfu(chand, wt, round_wind, place_wind):
                                            + [round_wind, place_wind]))
                 for mset in chand)
         and any((mset.name == 'chi')
-                    and (((mset.set_tile == wt) and (mset.set_tile not in (6, 15, 24)))
-                         or ((mset.set_tile + 2 == wt) and (mset.set_tile not in (0, 9, 18))))
+                    and (((mset.set_tile == wt)
+                            and (mset.set_tile not in (6, 15, 24)))
+                        or ((mset.set_tile + 2 == wt)
+                            and (mset.set_tile not in (0, 9, 18))))
                     for mset in chand)
     )
 
