@@ -214,7 +214,7 @@ try:
                         argv_index += 4
                         continue
                     else:
-                        raise Exception("Input error", "Incorrect set indificators after key '-chi'")
+                        raise Exception("Input error", "Incorrect set indicators after key '-chi'")
                 elif sys.argv[argv_index] == '-pon':
                     if tiles.index(sys.argv[argv_index + 1]) in range(0, 34):
                         open_hand.append(MahjongSet('pon', tiles.index(sys.argv[argv_index + 1])))
@@ -225,7 +225,7 @@ try:
                         argv_index += 2
                         continue
                     else:
-                        raise Exception("Input error", "Incorrect set indificator after key '-pon'")
+                        raise Exception("Input error", "Incorrect set indicator after key '-pon'")
                 elif sys.argv[argv_index] == '-kan':
                     if tiles.index(sys.argv[argv_index + 1]) in range(0, 34):
                         open_hand.append(MahjongSet('kan', tiles.index(sys.argv[argv_index + 1])))
@@ -237,7 +237,7 @@ try:
                         argv_index += 2
                         continue
                     else:
-                        raise Exception("Input error", "Incorrect set indificator after key '-kan'")
+                        raise Exception("Input error", "Incorrect set indicator after key '-kan'")
 
                 raise Exception("Input error", "Incorrect open hand's input")
 
@@ -289,13 +289,15 @@ except Exception as e:
 
 try:
     if tile_count < min_number_of_tiles:
-        raise Exception("Input error", "Not enought tiles in hand (parameters after key '-chand'/'ohand')")
+        raise Exception("Input error", "Not enough tiles in hand (parameters after key '-chand'/'ohand')")
 except Exception as e:
     print e[0] + ': ' + e[1]
     sys.exit(0)
 
 hand.sort()
 
+# TODO проработать функции на основе структуры: в закрытой руке победный сет, если цумо, в открытой - если наоборот
+# TODO проработка руки на возможность стакаться с малыми драконами
 # TODO посчитать количество тайлов в руке и ограничить до 18
 # TODO ограничить количество каждого тайла до 4
 # TODO без наличия кана невозможен риншан
