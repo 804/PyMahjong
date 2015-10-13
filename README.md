@@ -16,3 +16,8 @@ Library for processing hand in riichi-mahjong
 - MahjongYaku.py 	
     - added functions for calculate hand's structure
     - added functions for identification basic yaku
+
+# v.0.0.5
+- MahjongYaku.py 	
+    - reworked yaku's methods
+    - added functions for identification yakumans
